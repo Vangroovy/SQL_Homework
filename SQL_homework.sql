@@ -4,9 +4,12 @@ USE sakila;
 SELECT first_name, last_name
 FROM actor; 
 
--- 1b. Display the first and last name in the column Actor Name --
+-- 1b. Set the name columns to upper case and display the first and last name in the column Actor Name --
 SELECT CONCAT_WS(' ', first_name, last_name) AS actor_name
 FROM actor;
+
+UPDATE actor
+SET actor_name = UPPER(actor_name);
 
 -- 2a. Find all actors with the first name Joe --
 SELECT actor_id, first_name, last_name
@@ -18,10 +21,11 @@ SELECT first_name, last_name
 FROM actor
 WHERE last_name LIKE '%GEN%';
     
--- 2c. Find all actors with last names containing 'LI' --
+-- 2c. Find all actors with last names containing 'LI', order by last name --
 SELECT last_name, first_name
 FROM actor
-WHERE last_name LIKE '%LI%';
+WHERE last_name LIKE '%LI%'
+ORDER BY last_name;
     
 -- 2d. Find Afghanistan, Bangladesh and China --
 SELECT country_id, country
@@ -47,16 +51,16 @@ FROM actor
 GROUP BY last_name
 HAVING COUNT(*) >= 2;
 
--- 4c. Correct Groucho Williams to Harpo Williams *fix--
+-- 4c. Correct Groucho Williams to Harpo Williams --
 UPDATE actor
-SET first_name = REPLACE(first_name, 'Groucho', 'HARPO')
+SET first_name = "HARPO"
 WHERE first_name = 'Groucho' AND last_name = 'WILLIAMS';
 	
 
--- 4d. Correct Harpo Williams to GROUCHO in a single query Williams *check this one*--
+-- 4d. Correct Harpo Williams to GROUCHO in a single query Williams --
 UPDATE actor
-SET first_name = REPLACE(first_name, 'HARPO', 'Groucho')
-WHERE first_name = 'HARPO';
+SET first_name = 'Groucho'
+WHERE first_name = 'HARPO' AND last_name = 'WILLIAMS';
 
 -- 5a. Write a query to locate the schema of the address table --
 DESC sakila.address;
@@ -67,7 +71,7 @@ FROM staff s
 JOIN address a
 USING(address_id);
 
--- 6b. Display total amount rung by staff --
+-- 6b. Display total amount rung by staff in August 2005 --
 SELECT s.first_name, s.last_name, 
 SUM(p.amount) AS "total amount rung up"
 FROM staff s
@@ -92,7 +96,9 @@ COUNT(i.film_id) AS "total copies"
 FROM film f
 INNER JOIN inventory i
 ON f.film_id = i.film_id
-GROUP BY f.film_id;
+WHERE f.title = 'Hunchback Impossible'
+GROUP BY f.film_id
+;
 
 -- 6e. total paid by customer, sorted alphabetically --
 SELECT c.first_name, c.last_name, 
@@ -121,29 +127,26 @@ FROM actor a
 WHERE actor_id IN
 (
 	SELECT actor_id
-    FROM film f
-    WHERE title = 'Alone Trip'
-    );
-    
--- 7c.  Name and email addresses of Canadian customers --
-SELECT first_name, last_name, email
-FROM customer c
-WHERE address_id IN
-(
-	SELECT address_id
-    FROM address a
-	WHERE city_id IN
-    (	
-		SELECT city_id
-		FROM city c
-        WHERE country_id IN
-        (
-			SELECT country_id
-            FROM country cou
-            WHERE country = 'Canada'
-		)
+    FROM film_actor fa
+    WHERE film_id IN
+    (
+		SELECT film_id
+        FROM film f
+        WHERE title = 'Alone Trip'
 	)
 );
+    
+-- 7c.  Name and email addresses of Canadian customers *fix--
+SELECT first_name, last_name, email 
+FROM customer
+JOIN address ON
+customer.address_id = address.address_id
+JOIN city ON
+address.city_id = city.city_id
+JOIN country ON
+city.country_id = country.country_id
+WHERE country.country = 'Canada'
+;
 
 -- 7d.  Identify movies categorized as family films --
 SELECT title
@@ -170,39 +173,39 @@ GROUP BY film.title
 ORDER BY 2 DESC, 1
 ;
 
--- 7f. Display how much business, in dollars each store brought in *format--
+-- 7f. Display how much business, in dollars each store brought in --
 SELECT store.store_id, 
 SUM(payment.amount) AS 'Total Business'
 FROM store
-INNER JOIN inventory ON
+JOIN inventory ON
 store.store_id = inventory.store_id
-INNER JOIN rental ON
+JOIN rental ON
 inventory.inventory_id = rental.inventory_id
-INNER JOIN payment ON
+JOIN payment ON
 rental.rental_id = payment.rental_id          
 GROUP BY store.store_id;
 
 -- 7g.  Display for each store its store ID, city and country --
 SELECT store.store_id, city.city, country.country
 FROM store
-INNER JOIN address ON
+JOIN address ON
 store.address_id = address.address_id
-INNER JOIN city ON
+JOIN city ON
 address.city_id = city.city_id
-INNER JOIN country ON
+JOIN country ON
 city.country_id = country.country_id;
 
 -- 7h. List top 5 genres in gross revenue in descending order --
 SELECT category.name, 
 SUM(payment.amount) AS "Gross Revenue"
 FROM category
-INNER JOIN film_category ON
+JOIN film_category ON
 category.category_id = film_category.category_id
-INNER JOIN inventory ON
+JOIN inventory ON
 film_category.film_id = inventory.film_id
-INNER JOIN rental ON
+JOIN rental ON
 inventory.inventory_id = rental.inventory_id
-INNER JOIN payment ON
+JOIN payment ON
 rental.rental_id = payment.rental_id
 GROUP BY category.name
 ORDER BY 2 DESC, 1
@@ -214,13 +217,13 @@ CREATE VIEW `top_genre` AS
 SELECT category.`name`, 
 SUM(payment.`amount`) AS "Gross Revenue"
 FROM category
-INNER JOIN film_category ON
+JOIN film_category ON
 category.`category_id` = film_category.`category_id`
-INNER JOIN inventory ON
+JOIN inventory ON
 film_category.`film_id` = inventory.`film_id`
-INNER JOIN rental ON
+JOIN rental ON
 inventory.`inventory_id` = rental.`inventory_id`
-INNER JOIN payment ON
+JOIN payment ON
 rental.`rental_id` = payment.`rental_id`
 GROUP BY category.name
 ORDER BY 2 DESC, 1
@@ -229,6 +232,8 @@ LIMIT 5
 
 -- 8b. Display the view in 8a --
 SELECT * FROM `top_genre`;
+
+
 
 -- 8c.  Drop the view in 8c --
 DROP VIEW `top_genre`;
