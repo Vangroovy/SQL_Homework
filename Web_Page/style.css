@@ -1,0 +1,27 @@
+    .brhead {
+        font-weight: 700;
+        background-color:rgba(0, 0, 128, 0.057)
+    }
+    .snippet img{ 
+        display: block;
+        width: 30%; height:auto; 
+        float: left; 
+        margin: 5px;
+        padding: 0             
+        }
+
+    .thumbs img{ 
+        width: 225px; 
+        height: auto; 
+        float: left; 
+        padding: 0        
+        }
+
+    .visual img{
+        width: 100%;
+        height: auto;
+        float: center 
+        }
+
+    
+    
