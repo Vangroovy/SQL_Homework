@@ -11,7 +11,7 @@
         }
 
     .thumbs img{ 
-        width: 225px; 
+        width: 90%; 
         height: auto; 
         float: left; 
         padding: 0        
